@@ -69,17 +69,17 @@ def guide_decoder_by_candidates(db_id, table_id, trg_field, input_source, table_
                     # get column's type
                     if mark_type in ['bar', 'line'] and db_tables_columns_types!=None and db_tables_columns_types[db_id][table_id][tok] != 'numeric':
                         best_token = tok
-                        best_id = trg_field.vocab.stoi[best_token]
+                        best_id = trg_field[best_token]
                         is_in_topk = True
                         break
                     if mark_type == 'point' and db_tables_columns_types!=None and db_tables_columns_types[db_id][table_id][tok] == 'numeric':
                         best_token = tok
-                        best_id = trg_field.vocab.stoi[best_token]
+                        best_id = trg_field[best_token]
                         is_in_topk = True
                         break
                     if mark_type == 'arc' and db_tables_columns_types!=None and db_tables_columns_types[db_id][table_id][tok] != 'numeric':
                         best_token = tok
-                        best_id = trg_field.vocab.stoi[best_token]
+                        best_id = trg_field[best_token]
                         is_in_topk = True
                         break
 
@@ -88,16 +88,16 @@ def guide_decoder_by_candidates(db_id, table_id, trg_field, input_source, table_
                     if col != '':
                         if mark_type in ['bar', 'line'] and db_tables_columns_types != None and db_tables_columns_types[db_id][table_id][col] != 'numeric':
                             best_token = col
-                            best_id = trg_field.vocab.stoi[best_token]
+                            best_id = trg_field[best_token]
                             break
 
                         if mark_type == 'point' and db_tables_columns_types != None and db_tables_columns_types[db_id][table_id][col] == 'numeric':
                             best_token = col
-                            best_id = trg_field.vocab.stoi[best_token]
+                            best_id = trg_field[best_token]
                             break
                         if mark_type == 'arc' and db_tables_columns_types != None and db_tables_columns_types[db_id][table_id][col] != 'numeric':
                             best_token = col
-                            best_id = trg_field.vocab.stoi[best_token]
+                            best_id = trg_field[best_token]
                             break
 
     if current_token_type == 'y_axis':
@@ -113,18 +113,18 @@ def guide_decoder_by_candidates(db_id, table_id, trg_field, input_source, table_
                 if tok in candidate_columns and tok in table_columns:
                     if mark_type in ['bar', 'arc', 'line'] and agg_function == 'count':
                         best_token = tok
-                        best_id = trg_field.vocab.stoi[best_token]
+                        best_id = trg_field[best_token]
                         is_in_topk = True
                         break
                     if mark_type in ['bar', 'arc', 'line'] and agg_function != 'count' and \
                             db_tables_columns_types != None and db_tables_columns_types[db_id][table_id][tok] == 'numeric':
                         best_token = tok
-                        best_id = trg_field.vocab.stoi[best_token]
+                        best_id = trg_field[best_token]
                         is_in_topk = True
                         break
                     if mark_type == 'point' and tok != selected_x:
                         best_token = tok
-                        best_id = trg_field.vocab.stoi[best_token]
+                        best_id = trg_field[best_token]
                         break
 
             if is_in_topk == False and len(candidate_columns) > 0:
@@ -132,17 +132,17 @@ def guide_decoder_by_candidates(db_id, table_id, trg_field, input_source, table_
                     if col != '':
                         if mark_type in ['bar', 'arc', 'line'] and agg_function == 'count':
                             best_token = col
-                            best_id = trg_field.vocab.stoi[best_token]
+                            best_id = trg_field[best_token]
                             is_in_topk = True
                             break
                         if mark_type in ['bar', 'arc', 'line'] and agg_function != 'count' and \
                                 db_tables_columns_types != None and db_tables_columns_types[db_id][table_id][col] == 'numeric':
                             best_token = col
-                            best_id = trg_field.vocab.stoi[best_token]
+                            best_id = trg_field[best_token]
                             break
                         if mark_type == 'point' and col != selected_x:
                             best_token = col
-                            best_id = trg_field.vocab.stoi[best_token]
+                            best_id = trg_field[best_token]
                             break
 
         # TODO!
@@ -150,7 +150,7 @@ def guide_decoder_by_candidates(db_id, table_id, trg_field, input_source, table_
             for tok in topk_tokens:
                 if tok in candidate_columns and tok in table_columns:
                     best_token = tok
-                    best_id = trg_field.vocab.stoi[best_token]
+                    best_id = trg_field[best_token]
                     is_in_topk = True
                     break
 
@@ -165,7 +165,7 @@ def guide_decoder_by_candidates(db_id, table_id, trg_field, input_source, table_
                     # get column's type
                     if selected_x != tok and selected_y != tok and db_tables_columns_types !=None and db_tables_columns_types[db_id][table_id][tok] == 'categorical':
                         best_token = tok
-                        best_id = trg_field.vocab.stoi[best_token]
+                        best_id = trg_field[best_token]
                         is_in_topk = True
                         break
 
@@ -174,7 +174,7 @@ def guide_decoder_by_candidates(db_id, table_id, trg_field, input_source, table_
                     if col != selected_x and col != selected_y and db_tables_columns_types!=None and db_tables_columns_types[db_id][table_id][
                         col] == 'categorical':
                         best_token = col
-                        best_id = trg_field.vocab.stoi[best_token]
+                        best_id = trg_field[best_token]
                         break
 
         if selected_x == best_token or selected_y == best_token or db_tables_columns_types != None and db_tables_columns_types[db_id][table_id][
@@ -185,7 +185,7 @@ def guide_decoder_by_candidates(db_id, table_id, trg_field, input_source, table_
                     if selected_x != tok and selected_y != tok and db_tables_columns_types != None and db_tables_columns_types[db_id][table_id][
                         tok] == 'categorical':
                         best_token = tok
-                        best_id = trg_field.vocab.stoi[best_token]
+                        best_id = trg_field[best_token]
                         break
 
     if current_token_type == 'topk':  # bin [x] by ..
@@ -197,7 +197,7 @@ def guide_decoder_by_candidates(db_id, table_id, trg_field, input_source, table_
                     is_in_topk = True
         if is_in_topk == False:
             best_token = '3'  # default
-        best_id = trg_field.vocab.stoi[best_token]
+        best_id = trg_field[best_token]
 
     if current_token_type == 'groupby_axis':
         if best_token != 'x':
@@ -208,41 +208,41 @@ def guide_decoder_by_candidates(db_id, table_id, trg_field, input_source, table_
                         # get column's type
                         if db_tables_columns_types != None and db_tables_columns_types[db_id][table_id][tok] == 'categorical':
                             best_token = tok
-                            best_id = trg_field.vocab.stoi[best_token]
+                            best_id = trg_field[best_token]
                             is_in_topk = True
                             break
 
                 if is_in_topk == False:
                     best_token = get_x(pred_tokens_list)
-                    best_id = trg_field.vocab.stoi[best_token]
+                    best_id = trg_field[best_token]
 
     if current_token_type == 'bin_axis':  # bin [x] by ..
         best_token = 'x'
-        best_id = trg_field.vocab.stoi[best_token]
+        best_id = trg_field[best_token]
 
     template_list = get_template(input_source)
 
     if '[t]' not in template_list:  # have the chart template
         if current_token_type == 'chart_type':
             best_token = template_list[template_list.index('mark') + 1]
-            best_id = trg_field.vocab.stoi[best_token]
+            best_id = trg_field[best_token]
 
         if current_token_type == 'orderby_axis':
             #   print('Case-3')
             if template_list[template_list.index('sort') + 1] == '[x]':
                 best_token = 'x'
-                best_id = trg_field.vocab.stoi[best_token]
+                best_id = trg_field[best_token]
 
             elif template_list[template_list.index('sort') + 1] == '[y]':
                 best_token = 'y'
-                best_id = trg_field.vocab.stoi[best_token]
+                best_id = trg_field[best_token]
             else:
                 pass
                 # print('Let me know this issue!')
 
         if current_token_type == 'orderby_type':
             best_token = template_list[template_list.index('sort') + 2]
-            best_id = trg_field.vocab.stoi[best_token]
+            best_id = trg_field[best_token]
 
     return best_id, best_token
 
