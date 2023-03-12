@@ -1,10 +1,7 @@
-'''
-Define the Encoder of the model
-'''
-
 import torch
 import torch.nn as nn
 from .sublayer import MultiHeadAttentionLayer, PositionwiseFeedforwardLayer
+
 
 class Encoder(nn.Module):
     def __init__(self,

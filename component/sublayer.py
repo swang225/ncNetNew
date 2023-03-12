@@ -1,7 +1,6 @@
-''' Define the sublayers in encoder/decoder layer '''
-
 import torch
 import torch.nn as nn
+
 
 class MultiHeadAttentionLayer(nn.Module):
     def __init__(self, hid_dim, n_heads, dropout, device):
@@ -21,7 +20,7 @@ class MultiHeadAttentionLayer(nn.Module):
 
         self.dropout = nn.Dropout(dropout)
 
-        #         print(torch.sqrt(torch.FloatTensor([self.head_dim])))
+        # print(torch.sqrt(torch.FloatTensor([self.head_dim])))
 
         self.scale = torch.sqrt(torch.FloatTensor([self.head_dim])).to(device)
 
