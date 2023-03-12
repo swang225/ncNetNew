@@ -22,8 +22,7 @@ from .. import root
 class ncNet(object):
     def __init__(
             self,
-            trained_model_path,
-            load_trained=True,
+            trained_model_path=None
     ):
 
         self.device = get_device()
@@ -47,7 +46,9 @@ class ncNet(object):
         self.train_iterator, \
         self.valid_iterator, \
         self.test_iterator, \
-        self.my_max_length = build_vocab(
+        self.my_max_length, \
+        self.train_iterator_small, \
+            = build_vocab(
             data_dir=osp.join(root(), 'dataset', 'dataset_final'),
             db_info=osp.join(root(), 'dataset', 'database_information.csv'),
             batch_size=128,
@@ -87,20 +88,20 @@ class ncNet(object):
                       self.my_max_length
                       )
 
-        SRC_PAD_IDX = self.SRC.get_stoi()["<pad>"]
-        TRG_PAD_IDX = self.SRC.get_stoi()["<pad>"]
+        self.SRC_PAD_IDX = self.SRC.get_stoi()["<pad>"]
+        self.TRG_PAD_IDX = self.SRC.get_stoi()["<pad>"]
 
         self.ncNet = Seq2Seq(
             enc,
             dec,
             self.SRC,
-            SRC_PAD_IDX,
-            TRG_PAD_IDX,
+            self.SRC_PAD_IDX,
+            self.TRG_PAD_IDX,
             self.device
         ).to(self.device)
 
         self.trained_model_path = trained_model_path
-        if load_trained:
+        if self.trained_model_path is not None:
             self.ncNet.load_state_dict(
                 torch.load(
                     trained_model_path,

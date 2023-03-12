@@ -5,77 +5,77 @@ def create_visibility_matrix(SRC, each_src):
     each_src = np.array(each_src.to('cpu'))
 
     # find related index
-    nl_beg_index = np.where(each_src == SRC.vocab['<n>'])[0][0]
-    nl_end_index = np.where(each_src == SRC.vocab['</n>'])[0][0]
-    template_beg_index = np.where(each_src == SRC.vocab['<c>'])[0][0]
-    template_end_index = np.where(each_src == SRC.vocab['</c>'])[0][0]
-    col_beg_index = np.where(each_src == SRC.vocab['<col>'])[0][0]
-    col_end_index = np.where(each_src == SRC.vocab['</col>'])[0][0]
-    value_beg_index = np.where(each_src == SRC.vocab['<val>'])[0][0]
-    value_end_index = np.where(each_src == SRC.vocab['</val>'])[0][0]
-    table_name_beg_index = np.where(each_src == SRC.vocab['<d>'])[0][0]
-    table_name_end_index = np.where(each_src == SRC.vocab['</d>'])[0][0]
+    nl_beg_index = np.where(each_src == SRC['<n>'])[0][0]
+    nl_end_index = np.where(each_src == SRC['</n>'])[0][0]
+    template_beg_index = np.where(each_src == SRC['<c>'])[0][0]
+    template_end_index = np.where(each_src == SRC['</c>'])[0][0]
+    col_beg_index = np.where(each_src == SRC['<col>'])[0][0]
+    col_end_index = np.where(each_src == SRC['</col>'])[0][0]
+    value_beg_index = np.where(each_src == SRC['<val>'])[0][0]
+    value_end_index = np.where(each_src == SRC['</val>'])[0][0]
+    table_name_beg_index = np.where(each_src == SRC['<d>'])[0][0]
+    table_name_end_index = np.where(each_src == SRC['</d>'])[0][0]
 
-    if SRC.vocab['[d]'] in each_src:
-        table_index = np.where(each_src == SRC.vocab['[d]'])[0][0]
+    if SRC['[d]'] in each_src:
+        table_index = np.where(each_src == SRC['[d]'])[0][0]
     else:
         table_index = -1
 
-    if SRC.vocab['[x]'] in each_src:
-        x_index = np.where(each_src == SRC.vocab['[x]'])[0][0]
+    if SRC['[x]'] in each_src:
+        x_index = np.where(each_src == SRC['[x]'])[0][0]
     else:
         # print('x')
         x_index = -1
 
-    if SRC.vocab['[y]'] in each_src:
-        y_index = np.where(each_src == SRC.vocab['[y]'])[0][0]
+    if SRC['[y]'] in each_src:
+        y_index = np.where(each_src == SRC['[y]'])[0][0]
     else:
         # print('y')
         y_index = -1
 
-    if SRC.vocab['[z]'] in each_src:
-        color_index = np.where(each_src == SRC.vocab['[z]'])[0][0]
+    if SRC['[z]'] in each_src:
+        color_index = np.where(each_src == SRC['[z]'])[0][0]
     else:
         # print('y')
         color_index = -1
 
-    if SRC.vocab['[aggfunction]'] in each_src:
-        agg_y_index = np.where(each_src == SRC.vocab['[aggfunction]'])[0][0]
+    if SRC['[aggfunction]'] in each_src:
+        agg_y_index = np.where(each_src == SRC['[aggfunction]'])[0][0]
     else:
         agg_y_index = -1
         # print('agg')
 
-    if SRC.vocab['[g]'] in each_src:
-        group_index = np.where(each_src == SRC.vocab['[g]'])[0][0]
+    if SRC['[g]'] in each_src:
+        group_index = np.where(each_src == SRC['[g]'])[0][0]
     else:
         group_index = -1
         # print('xy')
 
-    if SRC.vocab['[b]'] in each_src:
-        bin_index = np.where(each_src == SRC.vocab['[b]'])[0][0]
+    if SRC['[b]'] in each_src:
+        bin_index = np.where(each_src == SRC['[b]'])[0][0]
     else:
         bin_index = -1
         # print('xy')
 
-    if SRC.vocab['[s]'] in each_src:
-        sort_index = np.where(each_src == SRC.vocab['[s]'])[0][0]
+    if SRC['[s]'] in each_src:
+        sort_index = np.where(each_src == SRC['[s]'])[0][0]
     else:
         sort_index = -1
 
-    if SRC.vocab['[f]'] in each_src:
-        where_index = np.where(each_src == SRC.vocab['[f]'])[0][0]
+    if SRC['[f]'] in each_src:
+        where_index = np.where(each_src == SRC['[f]'])[0][0]
     else:
         where_index = -1
         # print('w')
 
-    if SRC.vocab['[o]'] in each_src:
-        other_index = np.where(each_src == SRC.vocab['[o]'])[0][0]
+    if SRC['[o]'] in each_src:
+        other_index = np.where(each_src == SRC['[o]'])[0][0]
     else:
         other_index = -1
         # print('o')
 
-    if SRC.vocab['[k]'] in each_src:
-        topk_index = np.where(each_src == SRC.vocab['[k]'])[0][0]
+    if SRC['[k]'] in each_src:
+        topk_index = np.where(each_src == SRC['[k]'])[0][0]
     else:
         topk_index = -1
         # print('o')

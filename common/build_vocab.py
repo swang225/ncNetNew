@@ -167,10 +167,13 @@ def build_vocab(data_dir, db_info, batch_size, max_input_length):
     train_ds = NvBenchDataset(train_df, tk, vocab, types)
     train_dl = DataLoader(train_ds, batch_size=batch_size, collate_fn=DataPadder(vocab, types))
 
+    train_ds_small = NvBenchDataset(train_df.head(500), tk, vocab, types)
+    train_dl_small = DataLoader(train_ds_small, batch_size=batch_size, collate_fn=DataPadder(vocab, types))
+
     validation_ds = NvBenchDataset(validation_df, tk, vocab, types)
     validation_dl = DataLoader(validation_ds, batch_size=batch_size, collate_fn=DataPadder(vocab, types))
 
     test_ds = NvBenchDataset(test_df, tk, vocab, types)
     test_dl = DataLoader(test_ds, batch_size=batch_size, collate_fn=DataPadder(vocab, types))
 
-    return vocab, vocab, types, batch_size, train_dl, validation_dl, test_dl, max_input_length
+    return vocab, vocab, types, batch_size, train_dl, validation_dl, test_dl, max_input_length, train_dl_small
