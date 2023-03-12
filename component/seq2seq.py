@@ -1,12 +1,8 @@
-__author__ = "Yuyu Luo"
-
 import numpy as np
 import torch
 import torch.nn as nn
-from .AttentionForcing import create_visibility_matrix
+from .attention_forcing import create_visibility_matrix
 
-
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 class Seq2Seq(nn.Module):
     '''
@@ -47,7 +43,7 @@ class Seq2Seq(nn.Module):
         batch_matrix = np.array(batch_matrix)
 
         # batch_matrix = [batch size, n_heads, src_len, src_len]
-        return torch.tensor(batch_matrix).to(device)
+        return torch.tensor(batch_matrix).to(self.device)
 
     def make_src_mask(self, src):
         # src = [batch size, src len]

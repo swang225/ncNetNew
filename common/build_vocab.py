@@ -1,6 +1,6 @@
 import torch
 import pandas as pd
-import torch
+import os.path as osp
 from torchtext.data.utils import get_tokenizer
 from torchtext.vocab import build_vocab_from_iterator
 from torch.utils.data import Dataset
@@ -53,14 +53,20 @@ class Tokenizer:
             tokenizer=None,
             lower=True,
     ):
-        self._tok = get_tokenizer(tokenizer) if tokenizer is not None else self.tokenize
+        self._tok = get_tokenizer(tokenizer) \
+            if tokenizer is not None \
+            else self.tokenize
         self.lower = lower
 
     def tokenize(self, text):
         return text.split(' ')
 
     def __call__(self, data):
-        return self._tok(data.lower() if self.lower else data)
+        return self._tok(
+            data.lower()
+            if self.lower
+            else data
+        )
 
 
 class VocabBuilder:
@@ -80,7 +86,11 @@ class VocabBuilder:
                 cur_res = [self._tok(d.rstrip('\n')) for d in data]
                 res += cur_res
 
-        return build_vocab_from_iterator(res, specials=['<unk>', '<pad>', '<sos>', '<eos>'], min_freq=2)
+        return build_vocab_from_iterator(
+            res,
+            specials=['<unk>', '<pad>', '<sos>', '<eos>'],
+            min_freq=2
+        )
 
 
 class DataPadder:
@@ -110,11 +120,11 @@ class DataPadder:
         return src_batch, lbl_batch, tok_batch
 
 
-def build_vocab(data_dir, db_info, batch_size, max_input_length):
+def read_data(data_dir, db_info):
 
-    train_path = f"{data_dir}/train.csv"
-    validation_path = f"{data_dir}/dev.csv"
-    test_path = f"{data_dir}/test.csv"
+    train_path = osp.join(data_dir, "train.csv")
+    validation_path = osp.join(data_dir, "dev.csv")
+    test_path = osp.join(data_dir, "test.csv")
     info_path = db_info
 
     train_df = pd.read_csv(train_path, keep_default_na=False, dtype=str)
@@ -126,6 +136,13 @@ def build_vocab(data_dir, db_info, batch_size, max_input_length):
     validation_df = validation_df[["source", "labels", "token_types"]]
     train_df = train_df[["source", "labels", "token_types"]]
     info_df = info_df[["table", "column", "value"]]
+
+    return test_df, validation_df, train_df, info_df
+
+
+def build_vocab(data_dir, db_info, batch_size, max_input_length):
+
+    test_df, validation_df, train_df, info_df = read_data(data_dir, db_info)
 
     tk = Tokenizer()
     vb = VocabBuilder(tokenizer=tk)

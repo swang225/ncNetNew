@@ -1,38 +1,55 @@
-__author__ = "Yuyu Luo"
-
 import pandas as pd
 import sqlite3
 import re
 import os
+import os.path as osp
 
 import torch
-from .model.VisAwareTranslation import translate_sentence_with_guidance, translate_sentence, postprocessing
-from .model.Model import Seq2Seq
-from .model.Encoder import Encoder
-from .model.Decoder import Decoder
-from .preprocessing.build_vocab import build_vocab
+from ..common import get_device
+from ..common.translate import (
+    translate_sentence_with_guidance,
+    translate_sentence,
+    postprocessing
+)
+from ..component.seq2seq import Seq2Seq
+from ..component.encoder import Encoder
+from ..component.decoder import Decoder
+from ..common.build_vocab import build_vocab
+from ..common.process_dataset import ProcessData4Training
+from .. import root
 
-
-from .utilities.vis_rendering import VegaZero2VegaLite
-from .preprocessing.process_dataset import ProcessData4Training
-from vega import VegaLite
-
-os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 class ncNet(object):
-    def __init__(self, trained_model):
+    def __init__(
+            self,
+            trained_model_path,
+            load_trained=True,
+    ):
+
+        self.device = get_device()
+
+        # state variable to dataset specification
         self.data = None
         self.db_id = ''
         self.table_id = ''
         self.db_tables_columns = None
         self.db_tables_columns_types = None
-        self.trained_model = trained_model
+        self.data_processor = None
+        self.db_table_col_val_map = None
 
-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
-        self.SRC, self.TRG, self.TOK_TYPES, BATCH_SIZE, train_iterator, valid_iterator, test_iterator, self.my_max_length = build_vocab(
-            data_dir='./dataset/dataset_final/',
-            db_info='./dataset/database_information.csv',
+        # SRC - vocab for source
+        # TRG - vocab for target
+        # TOK_TYPES - vocab for token types
+        self.SRC, \
+        self.TRG, \
+        self.TOK_TYPES, \
+        self.BATCH_SIZE, \
+        self.train_iterator, \
+        self.valid_iterator, \
+        self.test_iterator, \
+        self.my_max_length = build_vocab(
+            data_dir=osp.join(root(), 'dataset', 'dataset_final'),
+            db_info=osp.join(root(), 'dataset', 'database_information.csv'),
             batch_size=128,
             max_input_length=128
         )
@@ -73,14 +90,53 @@ class ncNet(object):
         SRC_PAD_IDX = self.SRC.get_stoi()["<pad>"]
         TRG_PAD_IDX = self.SRC.get_stoi()["<pad>"]
 
-        self.ncNet = Seq2Seq(enc, dec, self.SRC, SRC_PAD_IDX, TRG_PAD_IDX, self.device).to(self.device)  # define the transformer-based ncNet
-        self.ncNet.load_state_dict(torch.load(trained_model, map_location=self.device))
+        self.ncNet = Seq2Seq(
+            enc,
+            dec,
+            self.SRC,
+            SRC_PAD_IDX,
+            TRG_PAD_IDX,
+            self.device
+        ).to(self.device)
 
+        self.trained_model_path = trained_model_path
+        if load_trained:
+            self.ncNet.load_state_dict(
+                torch.load(
+                    trained_model_path,
+                    map_location=self.device
+                )
+            )
 
-    def specify_dataset(self, data_type, db_url = None, table_name = None, data = None, data_url = None):
+    def vocab_data(self):
+
+        return (
+            self.SRC,
+            self.TRG,
+            self.TOK_TYPES,
+            self.BATCH_SIZE,
+            self.train_iterator,
+            self.valid_iterator,
+            self.test_iterator,
+            self.my_max_length
+        )
+
+    def specify_dataset(
+            self,
+            data_type,
+            db_url = None,
+            table_name = None,
+            data = None,
+            data_url = None
+    ):
         '''
+        this function creates a temporary save db for the input data
+        the save db is a sqlite db in ./dataset/database
+        the db name is temp_<table_name>, there is one table in it called <table_name>
+
         :param data_type: sqlite3, csv, json
-        :param db_url: db path for sqlite3 database, e.g., './dataset/database/flight/flight.sqlite'
+        :param db_url: db path for sqlite3 database,
+                       e.g., './dataset/database/flight/flight.sqlite'
         :param table_name: the table name in a sqlite3
         :param data: DataFrame for csv
         :param data_url: data path for csv or json
@@ -89,6 +145,7 @@ class ncNet(object):
         self.db_id = 'temp_' + table_name
         self.table_id = table_name
 
+        # read in data as dataframe
         if data_type == 'csv':
             if data != None and data_url == None:
                 self.data = data
@@ -100,22 +157,31 @@ class ncNet(object):
             if data == None and data_url != None:
                 self.data = pd.read_json(data_url)
             else:
-                raise ValueError('Read JSON from the json file, please only specify the "data_type" or "data_url"')
-
+                raise ValueError(
+                    'Read JSON from the json file, ' 
+                    'please only specify the "data_type" or "data_url"'
+                )
         elif data_type == 'sqlite3':
             # Create your connection.
             try:
                 cnx = sqlite3.connect(db_url)
                 self.data = pd.read_sql_query("SELECT * FROM " + table_name, cnx)
             except:
-                raise ValueError('Errors in read table from sqlite3 database. \ndb_url: {0}\n table_name : {1} '.format(data_url, table_name))
-
+                raise ValueError(
+                    f'Errors in read table from sqlite3 database. \n' 
+                    f'db_url: {data_url}\n'
+                    f' table_name : {table_name} '
+                )
         else:
             if data != None and type(data) == pd.core.frame.DataFrame:
                 self.data = data
             else:
-                raise ValueError('The data type must be one of the csv, json, sqlite3, or a DataFrame object.')
+                raise ValueError(
+                    'The data type must be one of the '
+                    'csv, json, sqlite3, or a DataFrame object.'
+                )
 
+        # same data column name and types
         self.db_tables_columns_types = dict()
         self.db_tables_columns_types[self.db_id] = dict()
         self.db_tables_columns_types[self.db_id][table_name] = dict()
@@ -127,91 +193,112 @@ class ncNet(object):
                 _type = 'categorical'
             self.db_tables_columns_types[self.db_id][table_name][col.lower()] = _type
 
-        # print(self.db_tables_columns_types)
+        # convert all columns in data df to string lower case
+        self.data.columns = self.data.columns.str.lower()
 
-        self.data.columns = self.data.columns.str.lower() # to lowercase
-
+        # a dictionary of table column names
         self.db_tables_columns = {
             self.db_id:{
                 self.table_id: list(self.data.columns)
             }
         }
 
+        # saves the input data to a storage place in .'dataset/database
+        # to be used by data processor
         if data_type == 'json' or data_type == 'sqlite3':
             # write to sqlite3 database
             if not os.path.exists('./dataset/database/'+self.db_id):
                 os.makedirs('./dataset/database/'+self.db_id)
-
             conn = sqlite3.connect('./dataset/database/'+self.db_id+'/'+self.db_id+'.sqlite')
-
             self.data.to_sql(self.table_id, conn, if_exists='replace', index=False)
 
-        self.DataProcesser = ProcessData4Training(db_url='./dataset/database')
-        self.db_table_col_val_map = dict()
-        table_cols = self.DataProcesser.get_table_columns(self.db_id)
-        self.db_table_col_val_map[self.db_id] = dict()
+        # create data processor and retrieve
+        # all data from db and save to db_table_col_val_map
+        self.data_processor = ProcessData4Training(db_url='./dataset/database')
+        self.db_table_col_val_map = {}
+        table_cols = self.data_processor.get_table_columns(self.db_id)
+        self.db_table_col_val_map[self.db_id] = {}
         for table, cols in table_cols.items():
-            col_val_map = self.DataProcesser.get_values_in_columns(self.db_id, table, cols, conditions='remove')
+            col_val_map = self.data_processor.get_values_in_columns(
+                self.db_id,
+                table,
+                cols,
+                conditions='remove'
+            )
             self.db_table_col_val_map[self.db_id][table] = col_val_map
 
     def show_dataset(self, top_rows=5):
         return self.data[:top_rows]
 
+    def translate(
+            self,
+            input_src,
+            token_types,
+            visualization_aware_translation=True,
+            show_progress=False,
+            db_id=None,
+            table_name=None,
+            db_tables_columns=None,
+            db_tables_columns_types=None
+    ):
 
-    def nl2vis(self, nl_question, chart_template=None, show_progress=None, visualization_aware_translation=True):
+        db_id = db_id or self.db_id
+        table_name = table_name or self.table_id
+        db_tables_columns = db_tables_columns or self.db_tables_columns
+        db_tables_columns_types = db_tables_columns_types or self.db_tables_columns_types
+
+        if visualization_aware_translation == True:
+            pred_query, attention, enc_attention = translate_sentence_with_guidance(
+                db_id,
+                table_name,
+                input_src,
+                self.SRC, self.TRG, self.TOK_TYPES,
+                token_types, self.SRC, self.ncNet,
+                db_tables_columns, db_tables_columns_types,
+                self.device, self.my_max_length, show_progress
+            )
+        else:
+            pred_query, attention, enc_attention = translate_sentence(
+                input_src,
+                self.SRC, self.TRG, self.TOK_TYPES,
+                token_types, self.ncNet,
+                self.device, self.my_max_length
+            )
+
+        pred_query = ' '.join(pred_query).replace(' <eos>', '').lower()
+        return pred_query, attention, enc_attention
+
+    def predict(
+            self,
+            nl_question,
+            chart_template=None,
+            show_progress=None,
+            visualization_aware_translation=True
+    ):
         # process and the nl_question and the chart template as input.
         # call the model to perform prediction
         # render the predicted query
-        query2vl = VegaZero2VegaLite()
 
         input_src, token_types = self.process_input(nl_question, chart_template)
 
-        if visualization_aware_translation == True:
-            # print("\nGenerate the visualization by visualization-aware translation:\n")
-
-            pred_query, attention, enc_attention = translate_sentence_with_guidance(
-                self.db_id, self.table_id, input_src, self.SRC, self.TRG, self.TOK_TYPES, token_types,
-                self.SRC, self.ncNet, self.db_tables_columns, self.db_tables_columns_types, self.device, self.my_max_length, show_progress
-            )
-
-            pred_query = ' '.join(pred_query).replace(' <eos>', '').lower()
-            if chart_template != None:
-                pred_query = postprocessing(pred_query, pred_query, True, input_src)
-            else:
-                pred_query = postprocessing(pred_query, pred_query, False, input_src)
-
-            pred_query = ' '.join(pred_query.replace('"', "'").split())
-
-            print('[NL Question]:', nl_question)
-            print('[Chart Template]:', chart_template)
-            print('[Predicted VIS Query]:', pred_query)
-
-            # print('[The Predicted VIS Result]:')
-            return VegaLite(query2vl.to_VegaLite(pred_query, self.data)), query2vl.to_VegaLite(pred_query, self.data)
-            # print('\n')
-
+        pred_query, attention, enc_attention = self.translate(
+            input_src=input_src,
+            token_types=token_types,
+            visualization_aware_translation=visualization_aware_translation,
+            show_progress=show_progress
+        )
+        if chart_template != None:
+            pred_query = postprocessing(pred_query, pred_query, True, input_src)
         else:
-            # print("\nGenerate the visualization by greedy decoding:\n")
+            pred_query = postprocessing(pred_query, pred_query, False, input_src)
 
-            pred_query,  attention, enc_attention = translate_sentence(
-                input_src, self.SRC, self.TRG, self.TOK_TYPES, token_types, self.ncNet, self.device, self.my_max_length
-            )
+        pred_query = ' '.join(pred_query.replace('"', "'").split())
 
-            pred_query = ' '.join(pred_query).replace(' <eos>', '').lower()
-            if chart_template != None:
-                pred_query = postprocessing(pred_query, pred_query, True, input_src)
-            else:
-                pred_query = postprocessing(pred_query, pred_query, False, input_src)
+        print('[NL Question]:', nl_question)
+        print('[Chart Template]:', chart_template)
+        print('[Predicted VIS Query]:', pred_query)
 
-            pred_query = ' '.join(pred_query.replace('"', "'").split())
-
-            print('[NL Question]:', nl_question)
-            print('[Chart Template]:', chart_template)
-            print('[Predicted VIS Query]:', pred_query)
-
-            # print('[The Predicted VIS Result]:')
-            return VegaLite(query2vl.to_VegaLite(pred_query, self.data)), query2vl.to_VegaLite(pred_query, self.data)
-
+        return pred_query
 
     def process_input(self, nl_question, chart_template):
 
@@ -239,8 +326,18 @@ class ncNet(object):
             token_types = token_types.strip()
             return token_types
 
-        def fix_chart_template(chart_template = None):
-            query_template = 'mark [T] data [D] encoding x [X] y aggregate [AggFunction] [Y] color [Z] transform filter [F] group [G] bin [B] sort [S] topk [K]'
+        def fix_chart_template(
+                chart_template=None
+        ):
+            query_template = \
+                'mark [T] ' \
+                'data [D] '\
+                'encoding x [X] y aggregate [AggFunction] [Y] ' \
+                'color [Z] transform filter [F] ' \
+                'group [G] ' \
+                'bin [B] ' \
+                'sort [S] ' \
+                'topk [K]'
 
             if chart_template != None:
                 try:
@@ -277,12 +374,15 @@ class ncNet(object):
 
         query_template = fix_chart_template(chart_template)
         # get a list of mentioned values in the NL question
-        col_names, value_names = self.DataProcesser.get_mentioned_values_in_NL_question(
+        col_names, value_names = self.data_processor.get_mentioned_values_in_NL_question(
             self.db_id, self.table_id, nl_question, db_table_col_val_map=self.db_table_col_val_map
         )
         col_names = ' '.join(str(e) for e in col_names)
         value_names = ' '.join(str(e) for e in value_names)
-        input_src = "<N> {} </N> <C> {} </C> <D> {} <COL> {} </COL> <VAL> {} </VAL> </D>".format(nl_question, query_template, self.table_id, col_names, value_names).lower()
+        input_src = (
+            f"<N> {nl_question} </N> " \
+            f"<C> {query_template} </C> " \
+            "<D> {self.table_id} <COL> {col_names} </COL> <VAL> {value_names} </VAL> </D>").lower()
         token_types = get_token_types(input_src)
 
         return input_src, token_types
@@ -290,7 +390,7 @@ class ncNet(object):
 
 if __name__ == '__main__':
     ncNet = ncNet(
-        trained_model='./save_models/trained_model.pt'
+        trained_model_path='./save_models/trained_model.pt'
     )
     ncNet.specify_dataset(
         data_type='sqlite3',

@@ -1,6 +1,3 @@
-__author__ = "Yuyu Luo"
-
-
 ''' Define the sublayers in encoder/decoder layer '''
 
 import torch

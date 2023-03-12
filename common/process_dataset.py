@@ -102,16 +102,15 @@ class ProcessData4Training(object):
                             values_in_columns[col] = []
                     else:
                         values_in_columns[col] = []
-
             except:
                 print('error.')
 
-        return values_in_columns
         '''
             {'Team_ID': [1, 2, 3, 4],
              'School_ID': [1, 2, 4, 5]
              }
         '''
+        return values_in_columns
 
     def get_mentioned_values_in_NL_question(self, db_id, table_id, NL_question, db_table_col_val_map):
         '''

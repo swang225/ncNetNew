@@ -1,13 +1,13 @@
-__author__ = "Yuyu Luo"
-
 import re
 import json
 
 import torch
 
+
 def get_candidate_columns(src):
     col_list = re.findall('<col>.*</col>', src)[0].lower().split(' ')
     return col_list[1:-1] # remove <col> </col>
+
 
 def get_template(src):
     col_list = re.findall('<c>.*</c>', src)[0].lower().split(' ')
@@ -43,8 +43,18 @@ def get_y(pred_tokens_list):
     return pred_tokens_list[pred_tokens_list.index('aggregate') + 2]
 
 
-def guide_decoder_by_candidates(db_id, table_id, trg_field, input_source, table_columns, db_tables_columns_types, topk_ids, topk_tokens,
-                                current_token_type, pred_tokens_list):
+def guide_decoder_by_candidates(
+        db_id,
+        table_id,
+        trg_field,
+        input_source,
+        table_columns,
+        db_tables_columns_types,
+        topk_ids,
+        topk_tokens,
+        current_token_type,
+        pred_tokens_list
+):
     '''
     get the current token types (X, Y,...),
     we use the topk tokens from the decoder and the candidate columns to inference the "best" pred_token.

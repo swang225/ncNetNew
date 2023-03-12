@@ -1,12 +1,10 @@
-__author__ = "Yuyu Luo"
-
 '''
 Define the Encoder of the model
 '''
 
 import torch
 import torch.nn as nn
-from .SubLayers import MultiHeadAttentionLayer, PositionwiseFeedforwardLayer
+from .sublayer import MultiHeadAttentionLayer, PositionwiseFeedforwardLayer
 
 class Encoder(nn.Module):
     def __init__(self,
