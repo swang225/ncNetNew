@@ -1,5 +1,7 @@
 import torch
 import torch.nn as nn
+import os.path as osp
+import pickle
 
 from ncNetNew.model.ncnet import ncNet
 from ncNetNew.common import Counter
@@ -147,34 +149,45 @@ def run_train(
         if valid_loss < best_valid_loss:
             print(f"saving best models with validation loss: {valid_loss}")
             best_valid_loss = valid_loss
-            torch.save(m1.ncNet.state_dict(), opt.output_dir + 'model_best.pt')
+            torch.save(
+                m1.ncNet.state_dict(),
+                str(osp.join(opt.output_dir, 'model_best.pt'))
+            )
 
         # save model on each epoch
-        print(f"saving mode for epoch: {epoch+1}")
-        torch.save(m1.ncNet.state_dict(), opt.output_dir + 'model_' + str(epoch+1) + '.pt')
+        print(f"saving mode for epoch: {epoch + 1}")
+        torch.save(
+            m1.ncNet.state_dict(),
+            str(osp.join(opt.output_dir, 'model_' + str(epoch + 1) + '.pt'))
+        )
 
         train_loss_list.append(train_loss)
         valid_loss_list.append(valid_loss)
 
-        print(f'Epoch: {epoch+1:02} | Time: {epoch_mins}m {epoch_secs}s')
+        print(f'Epoch: {epoch + 1:02} | Time: {epoch_mins}m {epoch_secs}s')
         print(f'\tTrain Loss: {train_loss:.3f} | Train PPL: {math.exp(train_loss):7.3f}')
         print(f'\t Val. Loss: {valid_loss:.3f} |  Val. PPL: {math.exp(valid_loss):7.3f}')
-        plt.plot(train_loss_list)
-        plt.plot(valid_loss_list)
-        plt.show()
+
+        res = {
+            "epoch": epoch + 1,
+            "train_loss": train_loss_list,
+            "valid_loss": valid_loss_list,
+        }
+
+        with open(str(osp.join(opt.output_dir, 'train_results.pkl')), 'wb') as handle:
+            pickle.dump(res, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 
 if __name__ == '__main__':
-
     from argparse import Namespace
 
     opt = Namespace()
     opt.data_dir = 'C:/Users/aphri/Documents/t0002/pycharm/repo/ncNetNew/dataset/dataset_final'
     opt.db_info = 'C:/Users/aphri/Documents/t0002/pycharm/repo/ncNetNew/dataset/database_information.csv'
-    opt.output_dir = 'C:/Users/aphri/Documents/t0002/pycharm/python/data/output_models'
+    opt.output_dir = 'C:/Users/aphri/Documents/t0002/pycharm/data/output_models'
     opt.epoch = 10
     opt.learning_rate = 0.0005
     opt.batch_size = 128
     opt.max_input_length = 128
 
-    run_train(opt=opt, testing=False)
+    run_train(opt=opt, testing=True)
