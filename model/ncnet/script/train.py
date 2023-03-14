@@ -10,7 +10,6 @@ import numpy as np
 import random
 import time
 import math
-import matplotlib.pyplot as plt
 
 
 def count_parameters(model):
@@ -182,9 +181,9 @@ if __name__ == '__main__':
     from argparse import Namespace
 
     opt = Namespace()
-    opt.data_dir = 'C:/Users/aphri/Documents/t0002/pycharm/repo/ncNetNew/dataset/dataset_final'
+    opt.data_dir = '/repo/ncNetNew/dataset/dataset_final'
     opt.db_info = 'C:/Users/aphri/Documents/t0002/pycharm/repo/ncNetNew/dataset/database_information.csv'
-    opt.output_dir = 'C:/Users/aphri/Documents/t0002/pycharm/data/output_models'
+    opt.output_dir = '/data/output_models'
     opt.epoch = 10
     opt.learning_rate = 0.0005
     opt.batch_size = 128

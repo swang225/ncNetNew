@@ -1,5 +1,17 @@
 import torch
 import time
+import pickle
+
+
+def read_pickle(dir):
+    with open(dir, 'rb') as handle:
+        b = pickle.load(handle)
+    return b
+
+
+def write_pickle(dir, data):
+    with open(dir, 'wb') as handle:
+        pickle.dump(data, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 
 def get_device():

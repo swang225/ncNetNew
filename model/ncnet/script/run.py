@@ -21,3 +21,5 @@ res = m1.predict(
 )
 
 res_vis = to_vega_lite(res)
+
+print(res)

@@ -17,7 +17,7 @@ if __name__ == "__main__":
     from argparse import Namespace
 
     opt = Namespace()
-    base_dir = 'C:/Users/aphri/Documents/t0002/pycharm/repo/ncNetNew'
+    base_dir = '/repo/ncNetNew'
     opt.model = f'{base_dir}/save_models/trained_model.pt'
     opt.data_dir = f'{base_dir}/dataset/dataset_final/'
     opt.db_info = f'{base_dir}/dataset/database_information.csv'

@@ -5,18 +5,18 @@ import os
 import os.path as osp
 
 import torch
-from ..common import get_device
-from ..common.translate import (
+from ncNetNew.common import get_device
+from ncNetNew.common.translate import (
     translate_sentence_with_guidance,
     translate_sentence,
     postprocessing
 )
-from ..component.seq2seq import Seq2Seq
-from ..component.encoder import Encoder
-from ..component.decoder import Decoder
-from ..common.build_vocab import build_vocab
-from ..common.process_dataset import ProcessData4Training
-from .. import root
+from ncNetNew.component.seq2seq import Seq2Seq
+from ncNetNew.component.encoder import Encoder
+from ncNetNew.component.decoder import Decoder
+from ncNetNew.common.build_vocab import build_vocab
+from ncNetNew.common.process_dataset import ProcessData4Training
+from ncNetNew import root
 
 
 class ncNet(object):
